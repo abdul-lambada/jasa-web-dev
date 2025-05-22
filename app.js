@@ -63,12 +63,56 @@ const App = () => {
     setContentIdeas('');
 
     try {
+      // Get API key from environment variable or use empty string
+      const apiKey = process.env.REACT_APP_GEMINI_API_KEY || "";
+      
+      // Check if API key is available
+      if (!apiKey) {
+        // Demo mode - provide sample content instead of API call
+        setTimeout(() => {
+          setContentIdeas(`# Ide Konten untuk Website ${websiteType}
+
+## Halaman Utama
+- Banner utama dengan tagline menarik
+- Fitur unggulan dengan ikon yang eye-catching
+- Testimonial dari pengguna/klien terpercaya
+- Call-to-action yang jelas dan menarik
+
+## Tentang Kami
+- Cerita singkat tentang perjalanan bisnis/individu
+- Visi dan misi yang menginspirasi
+- Tim inti dengan foto dan deskripsi singkat
+- Pencapaian dan penghargaan
+
+## Layanan/Produk
+- Kategori layanan/produk dengan gambar berkualitas
+- Deskripsi singkat tapi informatif
+- Pricing yang transparan
+- Fitur dan keuntungan dari setiap layanan/produk
+
+## Blog
+- Tutorial dan tips terkait industri Anda
+- Case study dari proyek sukses
+- Tren terbaru di industri
+- Wawancara dengan pakar atau testimoni klien
+
+## Kontak
+- Form kontak yang user-friendly
+- Informasi kontak (email, telepon, alamat)
+- Peta lokasi jika relevan
+- Link ke media sosial
+
+*Ini adalah konten demo karena API key tidak tersedia*`);
+          setIsLoading(false);
+        }, 1500); // Simulasi loading selama 1.5 detik
+        return;
+      }
+
       let chatHistory = [];
       const prompt = `Berikan ide konten yang kreatif dan menarik untuk website dengan jenis berikut: "${websiteType}". Sertakan ide untuk halaman utama, tentang kami, layanan/produk, blog, dan kontak. Format respons dalam poin-poin yang mudah dibaca.`;
       chatHistory.push({ role: "user", parts: [{ text: prompt }] });
 
       const payload = { contents: chatHistory };
-      const apiKey = ""; // API key is provided by the Canvas environment
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
       const response = await fetch(apiUrl, {
@@ -76,6 +120,10 @@ const App = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+      
+      if (!response.ok) {
+        throw new Error(`API returned status code ${response.status}`);
+      }
 
       const result = await response.json();
 
@@ -89,7 +137,7 @@ const App = () => {
         console.error("Unexpected API response structure:", result);
       }
     } catch (error) {
-      setErrorMessage("Terjadi kesalahan saat menghubungi API. Pastikan koneksi internet Anda stabil.");
+      setErrorMessage("Terjadi kesalahan saat menghubungi API: " + (error.message || "Pastikan koneksi internet Anda stabil."));
       console.error("Error calling Gemini API:", error);
     } finally {
       setIsLoading(false);
