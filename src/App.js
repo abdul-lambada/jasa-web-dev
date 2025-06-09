@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // Inline SVG icons to simulate lucide-react for direct HTML embedding
 // These icons are designed to be clear and representative of their function.
@@ -47,140 +47,38 @@ const SparklesIcon = () => (
 );
 
 const App = () => {
-  const [websiteType, setWebsiteType] = useState('');
-  const [contentIdeas, setContentIdeas] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  // State untuk Testimoni
+  const [testimonialName, setTestimonialName] = useState('');
+  const [testimonialMessage, setTestimonialMessage] = useState('');
+  const [testimonialsList, setTestimonialsList] = useState([]);
 
-  // Function to generate content ideas using Gemini API or fallback to demo mode
-  const generateContentIdeas = async () => {
-    setIsLoading(true);
-    setErrorMessage('');
-    setContentIdeas('');
+  // Memuat testimoni dari localStorage saat komponen dimuat
+  useEffect(() => {
+    const storedTestimonials = localStorage.getItem('testimonials');
+    if (storedTestimonials) {
+      setTestimonialsList(JSON.parse(storedTestimonials));
+    }
+  }, []);
 
-    try {
-      // Get API key from environment variable or use empty string
-      const apiKey = process.env.REACT_APP_GEMINI_API_KEY || "";
-      
-      // Check if API key is available
-      if (!apiKey) {
-        console.log("No API key available. Using demo mode.");
-        // Demo mode - provide sample content instead of API call
-        setTimeout(() => {
-          setContentIdeas(`# Ide Konten untuk Website ${websiteType}
+  // Menyimpan testimoni ke localStorage setiap kali testimonialsList berubah
+  useEffect(() => {
+    localStorage.setItem('testimonials', JSON.stringify(testimonialsList));
+  }, [testimonialsList]);
 
-## Halaman Utama
-- Banner utama dengan tagline menarik yang menggambarkan esensi ${websiteType}
-- Fitur/produk unggulan dengan visual yang eye-catching
-- Testimonial dari pengguna/klien terpercaya
-- Call-to-action yang jelas dan menarik
-
-## Tentang Kami
-- Cerita singkat tentang perjalanan bisnis/individu
-- Visi dan misi yang menginspirasi
-- Tim inti dengan foto dan deskripsi singkat
-- Pencapaian dan penghargaan
-
-## Layanan/Produk
-- Kategori layanan/produk dengan gambar berkualitas
-- Deskripsi singkat tapi informatif
-- Pricing yang transparan
-- Fitur dan keuntungan dari setiap layanan/produk
-
-## Blog
-- Tutorial dan tips terkait industri Anda
-- Case study dari proyek sukses
-- Tren terbaru di industri
-- Wawancara dengan pakar atau testimoni klien
-
-## Kontak
-- Form kontak yang user-friendly
-- Informasi kontak (email, telepon, alamat)
-- Peta lokasi jika relevan
-- Link ke media sosial
-
-*Ini adalah konten demo karena API key tidak tersedia*`);
-          setIsLoading(false);
-        }, 1500); // Simulasi loading selama 1.5 detik
-        return;
-      }
-
-      let chatHistory = [];
-      const prompt = `Berikan ide konten yang kreatif dan menarik untuk website dengan jenis berikut: "${websiteType}". Sertakan ide untuk halaman utama, tentang kami, layanan/produk, blog, dan kontak. Format respons dalam poin-poin yang mudah dibaca.`;
-      chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-
-      const payload = { contents: chatHistory };
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API returned status code ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      if (result.candidates && result.candidates.length > 0 &&
-          result.candidates[0].content && result.candidates[0].content.parts &&
-          result.candidates[0].content.parts.length > 0) {
-        const text = result.candidates[0].content.parts[0].text;
-        setContentIdeas(text);
-      } else {
-        setErrorMessage("Gagal mendapatkan ide konten. Silakan coba lagi.");
-        console.error("Unexpected API response structure:", result);
-      }
-    } catch (error) {
-      console.error("Error calling Gemini API:", error);
-      // Fallback to demo mode when API call fails
-      setTimeout(() => {
-        setContentIdeas(`# Ide Konten untuk Website ${websiteType}
-
-## Halaman Utama
-- Banner utama dengan tagline menarik yang menggambarkan esensi ${websiteType}
-- Fitur/produk unggulan dengan visual yang eye-catching
-- Testimonial dari pengguna/klien terpercaya
-- Call-to-action yang jelas dan menarik
-
-## Tentang Kami
-- Cerita singkat tentang perjalanan bisnis/individu
-- Visi dan misi yang menginspirasi
-- Tim inti dengan foto dan deskripsi singkat
-- Pencapaian dan penghargaan
-
-## Layanan/Produk
-- Kategori layanan/produk dengan gambar berkualitas
-- Deskripsi singkat tapi informatif
-- Pricing yang transparan
-- Fitur dan keuntungan dari setiap layanan/produk
-
-## Blog
-- Tutorial dan tips terkait industri Anda
-- Case study dari proyek sukses
-- Tren terbaru di industri
-- Wawancara dengan pakar atau testimoni klien
-
-## Kontak
-- Form kontak yang user-friendly
-- Informasi kontak (email, telepon, alamat)
-- Peta lokasi jika relevan
-- Link ke media sosial
-
-*Ini adalah konten demo karena API key tidak tersedia atau terjadi kesalahan saat menghubungi API*`);
-        setIsLoading(false);
-      }, 1500); // Simulasi loading selama 1.5 detik
-    } finally {
-      if (isLoading) {
-        setTimeout(() => setIsLoading(false), 1500); // Ensure loading state is always turned off
-      }
+  const handleTestimonialSubmit = () => {
+    if (testimonialName.trim() && testimonialMessage.trim()) {
+      const newTestimonial = {
+        name: testimonialName,
+        message: testimonialMessage,
+        date: new Date().toISOString(), // Simpan tanggal dalam format ISO
+      };
+      setTestimonialsList([newTestimonial, ...testimonialsList]); // Tambahkan testimoni baru di awal array
+      setTestimonialName('');
+      setTestimonialMessage('');
     }
   };
 
   return (
-    // Main container with a vibrant, animated background gradient
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4 sm:p-6 lg:p-8 font-inter bg-gradient-to-br from-blue-700 via-blue-900 to-gray-900 animate-gradient-shift">
       {/* Background circles for visual flair (trending aesthetic) */}
       <div className="absolute -top-20 -left-20 w-80 h-80 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
@@ -196,17 +94,22 @@ const App = () => {
             <svg className="w-full h-full" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                  <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" strokeWidth="0.5"/>
+                  <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" strokeWidth="0.5" />
                 </pattern>
               </defs>
               <rect width="100" height="100" fill="url(#grid)" />
             </svg>
           </div>
-          
+
+          <img
+            src="/logo.png"
+            alt="Jowi Web Logo"
+            className="mx-auto mb-6 w-24 h-24 sm:w-32 sm:h-32 object-contain rounded-full shadow-lg border-4 border-white bg-white bg-opacity-80"
+          />
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-4 sm:mb-6 leading-tight drop-shadow-lg animate-fade-in-down relative z-10">
             Wujudkan <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Impian Digital</span> Anda!
           </h1>
-          
+
           <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 w-16 h-16 flex items-center justify-center">
             <div className="animate-bounce bg-white bg-opacity-20 p-2 w-10 h-10 ring-1 ring-blue-300 shadow-lg rounded-full flex items-center justify-center">
               <svg className="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -214,7 +117,7 @@ const App = () => {
               </svg>
             </div>
           </div>
-          
+
           <p className="text-lg sm:text-xl md:text-2xl text-gray-200 mb-8 sm:mb-10 max-w-3xl mx-auto animate-fade-in relative z-10">
             Layanan profesional untuk <span className="font-semibold text-blue-300 underline decoration-2 decoration-blue-500 underline-offset-4">pembuatan</span>, <span className="font-semibold text-blue-300 underline decoration-2 decoration-blue-500 underline-offset-4">modifikasi</span>, <span className="font-semibold text-blue-300 underline decoration-2 decoration-blue-500 underline-offset-4">penambahan fitur</span>, dan <span className="font-semibold text-blue-300 underline decoration-2 decoration-blue-500 underline-offset-4">debugging</span> website Anda.
           </p>
@@ -227,12 +130,12 @@ const App = () => {
             {/* Decorative corner elements */}
             <div className="absolute top-0 left-0 w-12 h-12 border-t-2 border-l-2 border-blue-400 rounded-tl-xl"></div>
             <div className="absolute bottom-0 right-0 w-12 h-12 border-b-2 border-r-2 border-blue-400 rounded-br-xl"></div>
-            
+
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-5 border-b-2 border-white border-opacity-30 pb-3 flex items-center">
-              <span className="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 shadow-lg">1</span> 
+              <span className="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 shadow-lg">1</span>
               Layanan Kami
             </h2>
-            
+
             <ul className="text-gray-100 space-y-4 text-left mx-auto max-w-sm">
               <li className="flex items-center text-lg py-3 px-4 rounded-lg transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-500 hover:text-white group transform hover:translate-x-1 border-l-4 border-transparent hover:border-white">
                 <div className="p-2 bg-blue-500 bg-opacity-30 rounded-lg mr-3">
@@ -278,28 +181,77 @@ const App = () => {
             {/* Decorative corner elements */}
             <div className="absolute top-0 right-0 w-12 h-12 border-t-2 border-r-2 border-blue-400 rounded-tr-xl"></div>
             <div className="absolute bottom-0 left-0 w-12 h-12 border-b-2 border-l-2 border-blue-400 rounded-bl-xl"></div>
-            
+
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-5 border-b-2 border-white border-opacity-30 pb-3 flex items-center">
               <span className="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 shadow-lg">2</span>
               Teknologi Unggulan
             </h2>
-            
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="flex flex-col items-center bg-gradient-to-br from-blue-600 to-blue-800 text-white p-4 rounded-xl shadow-md transform transition-transform duration-200 hover:scale-105 hover:rotate-1">
-                <img src="https://www.php.net/images/logos/new-php-logo.svg" alt="PHP Logo" className="h-12 w-12 mb-2" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/48x48/ADD8E6/000000?text=PHP'; }} />
-                <span className="font-semibold text-xl">PHP</span>
-                <span className="text-xs mt-1 bg-blue-900 px-2 py-1 rounded-full">Server-side</span>
-              </div>
-              
-              <div className="flex flex-col items-center bg-gradient-to-br from-red-600 to-red-800 text-white p-4 rounded-xl shadow-md transform transition-transform duration-200 hover:scale-105 hover:rotate-1">
-                <img src="https://laravel.com/img/logomark.min.svg" alt="Laravel Logo" className="h-12 w-12 mb-2" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/48x48/D3D3D3/000000?text=Laravel'; }} />
-                <span className="font-semibold text-xl">Laravel</span>
-                <span className="text-xs mt-1 bg-red-900 px-2 py-1 rounded-full">Framework</span>
+
+            <div className="overflow-x-auto">
+              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 gap-3 mb-6 min-w-max">
+                <span className="flex items-center px-3 py-2 rounded bg-blue-700 text-white font-bold text-xs sm:text-sm whitespace-nowrap"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" alt="CSS3" className="h-5 w-5 mr-2" />CSS3</span>
+                <span className="flex items-center px-3 py-2 rounded bg-gray-900 text-yellow-400 font-bold text-sm"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" alt="JS" className="h-5 w-5 mr-2" />JAVASCRIPT</span>
+                <span className="flex items-center px-3 py-2 rounded bg-indigo-700 text-white font-bold text-sm"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg" alt="PHP" className="h-5 w-5 mr-2" />PHP</span>
+                <span className="flex items-center px-3 py-2 rounded bg-blue-800 text-white font-bold text-sm"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" alt="Python" className="h-5 w-5 mr-2" />PYTHON</span>
+                <span className="flex items-center px-3 py-2 rounded bg-orange-600 text-white font-bold text-sm"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" alt="HTML5" className="h-5 w-5 mr-2" />HTML5</span>
+                <span className="flex items-center px-3 py-2 rounded bg-black text-white font-bold text-sm"><svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"><polygon points="12,3 22,21 2,21" fill="white" /></svg>VERCEL</span>
+                <span className="flex items-center px-3 py-2 rounded bg-violet-700 text-white font-bold text-sm"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/bootstrap/bootstrap-original.svg" alt="Bootstrap" className="h-5 w-5 mr-2" />BOOTSTRAP</span>
+                <span className="flex items-center px-3 py-2 rounded bg-red-600 text-white font-bold text-sm"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/codeigniter/codeigniter-plain.svg" alt="CodeIgniter" className="h-5 w-5 mr-2" />CODEIGNITER</span>
+                <span className="flex items-center px-3 py-2 rounded bg-yellow-500 text-white font-bold text-sm">FILAMENT</span>
+                <span className="flex items-center px-3 py-2 rounded bg-red-700 text-white font-bold text-sm"><img src="https://img.shields.io/badge/laravel-%23FF2D20.svg?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel" className="h-5 w-5 mr-2" />LARAVEL</span>
+                <span className="flex items-center px-3 py-2 rounded bg-indigo-900 text-white font-bold text-sm">LIVEWIRE</span>
+                <span className="flex items-center px-3 py-2 rounded bg-green-700 text-white font-bold text-sm"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/npm/npm-original-wordmark.svg" alt="NPM" className="h-5 w-5 mr-2" />NPM</span>
+                <span className="flex items-center px-3 py-2 rounded bg-green-900 text-white font-bold text-sm"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" alt="Node.js" className="h-5 w-5 mr-2" />NODE.JS</span>
+                <span className="flex items-center px-3 py-2 rounded bg-red-800 text-white font-bold text-sm"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/apache/apache-original.svg" alt="Apache" className="h-5 w-5 mr-2" />APACHE</span>
+                <span className="flex items-center px-3 py-2 rounded bg-blue-900 text-white font-bold text-sm"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mariadb/mariadb-original.svg" alt="MariaDB" className="h-5 w-5 mr-2" />MARIADB</span>
+                <span className="flex items-center px-3 py-2 rounded bg-blue-800 text-white font-bold text-sm"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg" alt="MySQL" className="h-5 w-5 mr-2" />MYSQL</span>
+                <span className="flex items-center px-3 py-2 rounded bg-green-600 text-white font-bold text-sm"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original.svg" alt="MongoDB" className="h-5 w-5 mr-2" />MONGODB</span>
+                <span className="flex items-center px-3 py-2 rounded bg-blue-800 text-white font-bold text-sm"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" alt="Postgres" className="h-5 w-5 mr-2" />POSTGRES</span>
               </div>
             </div>
-            
+
             <p className="text-base text-gray-200 mt-3 border-t border-white border-opacity-20 pt-3">
               <span className="font-semibold">Keunggulan:</span> Pengembangan web yang kuat, efisien, dan skalabel
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mt-8 mb-10">
+          {/* Paket Perawatan */}
+          <div className="bg-white bg-opacity-20 border-2 border-blue-500 rounded-2xl shadow-lg px-8 py-10 flex flex-col items-center hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 animate-slide-up">
+            <h3 className="text-2xl font-bold text-yellow-300 mb-2 text-center">Modifikasi / Penambahan Fitur / Debugging</h3>
+            <p className="text-2xl font-extrabold text-white mb-2 text-center">Mulai Rp 500.000 – Rp 1.500.000</p>
+            <ul className="text-white text-left mb-6 space-y-2">
+              <li>✔ Modifikasi tampilan atau struktur website yang sudah ada</li>
+              <li>✔ Penambahan fitur baru (sesuai dengan website yang di minta)</li>
+              <li>✔ Debugging & perbaikan error</li>
+              <li>✔ Optimalisasi performa & tampilan</li>
+              <li>✔ Konsultasi & revisi sesuai kebutuhan</li>
+            </ul>
+            <p className="text-xs text-white mb-4 text-center">Harga akhir tergantung kerumitan kode, bahasa pemrograman, dan struktur website.</p>
+            <a href="https://wa.me/6285156553226?text=Halo%20saya%20ingin%20konsultasi%20modifikasi%20atau%20debugging%20website" target="_blank" rel="noopener noreferrer" className="mt-auto inline-block bg-yellow-400 text-blue-900 font-bold py-2 px-6 rounded-full shadow hover:bg-yellow-300 transition">Konsultasi Sekarang</a>
+          </div>
+          {/* Paket Pembuatan */}
+          <div className="bg-white bg-opacity-20 border-2 border-blue-500 rounded-2xl shadow-lg px-8 py-10 flex flex-col items-center hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 animate-slide-up delay-100">
+            <h3 className="text-2xl font-bold text-green-300 mb-2 text-center">Pembuatan Website dari Nol</h3>
+            <p className="text-2xl font-extrabold text-white mb-2 text-center">Mulai Rp 2.000.000</p>
+            <ul className="text-white text-left mb-6 space-y-2">
+              <li>✔ Pembuatan website dari awal hingga jadi</li>
+              <li>✔ Desain modern & responsif</li>
+              <li>✔ Fitur lengkap (sesuai dengan website yang di minta)</li>
+              <li>✔ Integrasi media sosial & fitur dinamis (jika diperlukan)</li>
+              <li>✔ Konsultasi, revisi, dan support selama proses pembuatan</li>
+            </ul>
+            <p className="text-xs text-white mb-4 text-center">Harga akhir tergantung kerumitan fitur, bahasa pemrograman, dan struktur website.</p>
+            <a href="https://wa.me/6285156553226?text=Halo%20saya%20ingin%20pembuatan%20website%20dari%20nol%20sampai%20jadi" target="_blank" rel="noopener noreferrer" className="mt-auto inline-block bg-green-400 text-blue-900 font-bold py-2 px-6 rounded-full shadow hover:bg-green-300 transition">Konsultasi Website Baru</a>
+          </div>
+        </div>
+
+        {/* Card: Konsultasi & Revisi Minor */}
+        <div className="max-w-2xl mx-auto mt-6 mb-10">
+          <div className="bg-white bg-opacity-20 backdrop-blur-lg border border-white border-opacity-30 rounded-2xl shadow-lg px-6 py-5 text-center animate-fade-in">
+            <p className="text-white text-lg font-semibold">
+              Semua paket sudah termasuk <span className="text-green-300 font-bold">konsultasi gratis</span> & revisi minor!
             </p>
           </div>
         </div>
@@ -307,103 +259,89 @@ const App = () => {
         {/* Gemini API Feature with Improved UI */}
         <div className="bg-white bg-opacity-15 backdrop-filter backdrop-blur-md p-6 sm:p-8 rounded-2xl shadow-xl mb-10 border border-opacity-20 border-white animate-fade-in-up relative overflow-hidden">
           {/* Decorative elements */}
-          <div className="absolute -right-12 -top-12 w-24 h-24 bg-blue-500 opacity-20 rounded-full blur-xl"></div>
-          <div className="absolute -left-12 -bottom-12 w-24 h-24 bg-purple-500 opacity-20 rounded-full blur-xl"></div>
-          
+          <div className="absolute -right-12 -top-12 w-24 h-24 bg-green-500 opacity-20 rounded-full blur-xl"></div>
+
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-5 flex items-center justify-center">
             <div className="relative mr-3">
-              <SparklesIcon className="text-blue-300 w-8 h-8 animate-pulse-slow" />
-              <div className="absolute inset-0 animate-ping bg-blue-500 rounded-full opacity-30"></div>
-            </div> 
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-purple-400">
-              Generator Ide Konten Website ✨
+              {/* Placeholder for ChatBubbleOvalLeftEllipsisIcon */}
+              <div className="w-8 h-8 bg-green-300 rounded-full animate-pulse-slow"></div>
+              <div className="absolute inset-0 animate-ping bg-green-500 rounded-full opacity-30"></div>
+            </div>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-300 to-teal-400">
+              Bagikan Testimoni Anda ✍️
             </span>
           </h2>
-          
+
+          {/* Testimonial Form */}
           <div className="bg-black bg-opacity-20 rounded-xl p-5 mb-6">
             <p className="text-lg text-gray-200 mb-4">
-              Masukkan jenis website Anda untuk mendapatkan ide konten yang menarik:
+              Kami sangat menghargai masukan Anda. Silakan bagikan pengalaman Anda dengan layanan kami:
             </p>
-            
-            <div className="flex flex-wrap gap-2 mb-4">
-              <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded-full cursor-pointer hover:bg-blue-700" 
-                    onClick={() => setWebsiteType("Toko online kerajinan tangan")}>
-                Toko online kerajinan
-              </span>
-              <span className="text-xs bg-green-600 text-white px-2 py-1 rounded-full cursor-pointer hover:bg-green-700" 
-                    onClick={() => setWebsiteType("Blog perjalanan pribadi")}>
-                Blog perjalanan
-              </span>
-              <span className="text-xs bg-purple-600 text-white px-2 py-1 rounded-full cursor-pointer hover:bg-purple-700" 
-                    onClick={() => setWebsiteType("Website portofolio fotografi")}>
-                Portofolio fotografi
-              </span>
-            </div>
-            
-            <div className="relative">
-              <input
-                type="text"
-                className="w-full p-4 pl-12 border-2 border-blue-400 rounded-xl mb-5 text-lg bg-white bg-opacity-20 text-white placeholder-gray-300 focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-blue-500 transition duration-300"
-                placeholder="Contoh: Blog resep masakan sehat"
-                value={websiteType}
-                onChange={(e) => setWebsiteType(e.target.value)}
-              />
-              <div className="absolute left-3 top-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="testimonialNameInput" className="block text-sm font-medium text-gray-300 mb-1">Nama Anda</label>
+                <input
+                  type="text"
+                  id="testimonialNameInput"
+                  className="w-full p-3 border-2 border-green-400 rounded-xl bg-white bg-opacity-20 text-white placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-green-300 focus:border-green-500 transition duration-300"
+                  placeholder="cth: Budi Sanjaya"
+                  value={testimonialName}
+                  onChange={(e) => setTestimonialName(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="testimonialMessageInput" className="block text-sm font-medium text-gray-300 mb-1">Pesan Testimoni</label>
+                <textarea
+                  id="testimonialMessageInput"
+                  rows="4"
+                  className="w-full p-3 border-2 border-green-400 rounded-xl bg-white bg-opacity-20 text-white placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-green-300 focus:border-green-500 transition duration-300"
+                  placeholder="Tuliskan kesan dan pesan Anda di sini..."
+                  value={testimonialMessage}
+                  onChange={(e) => setTestimonialMessage(e.target.value)}
+                />
               </div>
             </div>
-            
             <button
-              onClick={generateContentIdeas}
-              disabled={isLoading || !websiteType.trim()}
-              className="w-full inline-flex items-center justify-center bg-gradient-to-r from-blue-500 to-blue-700 text-white px-8 py-4 rounded-xl text-lg sm:text-xl font-bold shadow-lg hover:from-blue-600 hover:to-blue-800 transition duration-300 transform hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
+              onClick={handleTestimonialSubmit}
+              disabled={!(typeof testimonialName === 'string' && testimonialName.trim()) || !(typeof testimonialMessage === 'string' && testimonialMessage.trim())}
+              className="mt-6 w-full inline-flex items-center justify-center bg-gradient-to-r from-green-500 to-teal-600 text-white px-8 py-3 rounded-xl text-lg font-bold shadow-lg hover:from-green-600 hover:to-teal-700 transition duration-300 transform hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
             >
-              {isLoading ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Membuat Ide...
-                </span>
-              ) : (
-                <>
-                  <SparklesIcon className="mr-3 w-6 h-6 group-hover:rotate-12 transition-transform duration-300" /> Hasilkan Ide Konten
-                  <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
-                </>
-              )}
+              {/* Placeholder for PencilSquareIcon */}
+              <span className="mr-2">✏️</span> Kirim Testimoni
+              <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
             </button>
           </div>
 
-          {errorMessage && (
-            <div className="bg-red-900 bg-opacity-30 border border-red-500 text-red-300 p-4 rounded-lg mt-5 flex items-start">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="text-base sm:text-lg font-medium">{errorMessage}</p>
-            </div>
-          )}
-
-          {contentIdeas && (
-            <div className="mt-8 p-5 bg-white bg-opacity-20 border border-white border-opacity-30 rounded-xl text-left text-gray-100 whitespace-pre-wrap shadow-inner overflow-auto max-h-96 relative">
-              <div className="absolute top-2 right-2 flex space-x-2">
-                <button className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-colors" title="Copy to clipboard" onClick={() => {navigator.clipboard.writeText(contentIdeas).catch(e => console.error('Could not copy text: ', e))}}>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                </button>
+          {/* Display Testimonials */}
+          <div className="mt-8">
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-6 flex items-center">
+              {/* Placeholder for UserGroupIcon */}
+              <span className="mr-3 text-2xl">👥</span> Testimoni dari Pelanggan:
+            </h3>
+            {(typeof testimonialsList !== 'undefined' && testimonialsList.length === 0) ? (
+              <p className="text-gray-400 italic text-center py-4">Belum ada testimoni. Jadilah yang pertama untuk berbagi pengalaman!</p>
+            ) : (
+              <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar-green">
+                {typeof testimonialsList !== 'undefined' && testimonialsList.slice().reverse().map((testimonial, index) => (
+                  <div
+                    key={index}
+                    className="bg-white bg-opacity-10 border border-white border-opacity-20 rounded-xl p-5 shadow-lg animate-fade-in-up"
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
+                    <div className="flex items-start mb-3">
+                      {/* Placeholder for UserCircleIcon */}
+                      <span className="w-10 h-10 bg-green-300 rounded-full mr-4 flex-shrink-0 text-2xl flex items-center justify-center">👤</span>
+                      <div>
+                        <p className="font-semibold text-lg text-white">{testimonial.name}</p>
+                        <p className="text-xs text-gray-400">{new Date(testimonial.date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                      </div>
+                    </div>
+                    <p className="text-gray-200 whitespace-pre-wrap leading-relaxed text-sm sm:text-base">"{testimonial.message}"</p>
+                  </div>
+                ))}
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold mb-4 text-blue-300 border-b border-blue-400 pb-2 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Ide Konten Anda:
-              </h3>
-              <p className="text-base sm:text-lg leading-relaxed">{contentIdeas}</p>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Call to Action & Contact with improved design */}
@@ -411,7 +349,7 @@ const App = () => {
           {/* Decorative elements */}
           <div className="absolute -right-20 -top-20 w-40 h-40 bg-white opacity-10 rounded-full"></div>
           <div className="absolute -left-20 -bottom-20 w-40 h-40 bg-white opacity-10 rounded-full"></div>
-          
+
           <div className="relative z-10">
             <div className="flex flex-col md:flex-row md:items-center justify-between">
               <div className="mb-6 md:mb-0 md:mr-8">
@@ -421,7 +359,7 @@ const App = () => {
                   Dapatkan <span className="underline decoration-2 decoration-yellow-400">konsultasi gratis</span> sekarang juga!
                 </p>
               </div>
-              
+
               <div className="flex flex-col items-center">
                 <a
                   href="https://wa.me/6285156553226"
@@ -436,29 +374,33 @@ const App = () => {
                     Hubungi Kami
                     <span className="block text-sm font-normal text-green-200">Chat WhatsApp</span>
                   </span>
-                  <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
                 </a>
-                
-                <div className="mt-4 text-white text-center">
-                  <span className="text-sm bg-blue-500 bg-opacity-50 rounded-full px-3 py-1">Respons cepat dalam 2 jam</span>
-                </div>
               </div>
-            </div>
-            
-            <div className="mt-8 border-t border-blue-400 border-opacity-30 pt-6 text-center">
-              <p className="flex items-center justify-center text-white">
-                <MailIcon className="mr-2 w-6 h-6" /> Konsultasi gratis dengan 
-                <span className="font-bold text-yellow-300 ml-1 relative group">
-                  Abdul Lambada
-                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-yellow-300 transform origin-bottom scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
-                </span>
-              </p>
             </div>
           </div>
         </div>
+
+        {/* Animasi CSS sederhana */}
+        <style>{`
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in {
+    animation: fade-in 1s ease;
+  }
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-slide-up {
+    animation: slide-up 1.1s cubic-bezier(.4,2,.6,1) both;
+  }
+  .delay-100 { animation-delay: 0.15s; }
+  .delay-200 { animation-delay: 0.3s; }
+`}</style>
       </div>
     </div>
   );
 };
-
 export default App;
