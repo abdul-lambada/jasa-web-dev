@@ -46,7 +46,7 @@ const App = () => {
     fetch(SHEETDB_API)
       .then((response) => response.json())
       .then((data) => {
-        // Data sudah array of object: {nama, pesan, tanggal}
+        console.log('SheetDB fetched data:', data); // Debug log
         setTestimonialsList(data);
       })
       .catch(() => setTestimonialsList([]));
