@@ -265,7 +265,7 @@ const App = () => {
                   setIsSubmitted(true);
                   setTestimonialName("");
                   setTestimonialMessage("");
-                  setTestimonialAvatar("");
+                  // setTestimonialAvatar is removed, no-op ("");
                 }, 100);
               }}
             >
@@ -319,11 +319,11 @@ const App = () => {
                         });
                         const data = await response.json();
                         if (data && data.file) {
-                          setTestimonialAvatar(`https://ucarecdn.com/${data.file}/`);
+                          // setTestimonialAvatar is removed, no-op (`https://ucarecdn.com/${data.file}/`);
                         }
                       } catch (err) {
                         // error handling
-                        setTestimonialAvatar('');
+                        // setTestimonialAvatar is removed, no-op ('');
                       }
                       setAvatarUploading(false);
                     }
