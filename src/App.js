@@ -53,34 +53,6 @@ const App = () => {
       .catch(() => setTestimonialsList([]));
   }, [isSubmitted]); // refresh list setelah submit
 
-  // Handle submit ke SheetDB
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitted(false);
-    const tanggal = new Date().toISOString();
-    const formData = {
-      nama: testimonialName,
-      pesan: testimonialMessage,
-      tanggal,
-      foto_url: testimonialAvatar,
-    };
-    try {
-      const response = await fetch(SHEETDB_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: formData }),
-      });
-      if (response.ok) {
-        setIsSubmitted(true);
-        setTestimonialName('');
-        setTestimonialMessage('');
-        setTestimonialAvatar('');
-      }
-    } catch (err) {
-      // bisa tambahkan notif error jika mau
-    }
-  };
-
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4 sm:p-6 lg:p-8 font-inter bg-gradient-to-br from-blue-700 via-blue-900 to-gray-900 animate-gradient-shift">
