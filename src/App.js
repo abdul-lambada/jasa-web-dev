@@ -41,7 +41,6 @@ const App = () => {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [testimonialsList, setTestimonialsList] = useState([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   // Fetch testimoni dari SheetDB saat komponen dimuat
   useEffect(() => {
@@ -380,7 +379,7 @@ const App = () => {
                 <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
               </button>
             </form>
-            <iframe name="dummyframe" style={{display:'none'}} />
+            <iframe name="dummyframe" title="Testimoni Dummy Frame" style={{display:'none'}} />
           </div>
 
           {/* Display Testimonials */}
