@@ -260,17 +260,24 @@ const App = () => {
               method="POST"
               className="space-y-4"
               target="dummyframe"
-              onSubmit={() => {
+              onSubmit={(e) => {
+                // Debugging: log data yang akan dikirim
+                console.log('SUBMIT DATA:', {
+                  nama: testimonialName,
+                  pesan: testimonialMessage,
+                  tanggal: new Date().toISOString(),
+                  foto_url: avatarPreview
+                });
                 setTimeout(() => {
                   setIsSubmitted(true);
                   setTestimonialName("");
                   setTestimonialMessage("");
                   setAvatarPreview("");
-                }, 100);
+                }, 300);
               }}
             >
               <input type="hidden" name="data[tanggal]" value={new Date().toISOString()} />
-              <input type="hidden" name="data[foto_url]" value={avatarPreview} />
+              <input type="hidden" name="data[foto_url]" value={avatarPreview || ''} />
               <div>
                 <label htmlFor="testimonialNameInput" className="block text-sm font-medium text-gray-300 mb-1">Nama Anda</label>
                 <input
