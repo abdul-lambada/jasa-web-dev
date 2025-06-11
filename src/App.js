@@ -37,6 +37,8 @@ const App = () => {
   const [testimonialName, setTestimonialName] = useState('');
   const [testimonialMessage, setTestimonialMessage] = useState('');
   const [testimonialAvatar, setTestimonialAvatar] = useState('');
+  const [avatarPreview, setAvatarPreview] = useState('');
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [testimonialsList, setTestimonialsList] = useState([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -286,58 +288,99 @@ const App = () => {
             {isSubmitted && (
               <div className="mb-4 p-3 rounded bg-green-700 text-white font-semibold">Terima kasih, testimoni Anda telah terkirim!</div>
             )}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <input type="hidden" name="tanggal" value={new Date().toISOString()} />
+            <form
+              action="https://sheetdb.io/api/v1/r6yuk1em8fl9a"
+              method="POST"
+              className="space-y-4"
+              target="dummyframe"
+              onSubmit={() => {
+                setTimeout(() => {
+                  setIsSubmitted(true);
+                  setTestimonialName("");
+                  setTestimonialMessage("");
+                  setTestimonialAvatar("");
+                }, 100);
+              }}
+            >
+              <input type="hidden" name="data[tanggal]" value={new Date().toISOString()} />
               <div>
                 <label htmlFor="testimonialNameInput" className="block text-sm font-medium text-gray-300 mb-1">Nama Anda</label>
                 <input
                   type="text"
                   id="testimonialNameInput"
-                  name="nama"
+                  name="data[nama]"
                   className="w-full p-3 border-2 border-green-400 rounded-xl bg-white bg-opacity-20 text-white placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-green-300 focus:border-green-500 transition duration-300"
                   placeholder="cth: Budi Sanjaya"
                   value={testimonialName}
                   onChange={(e) => setTestimonialName(e.target.value)}
                   required
-                  disabled={loading}
                 />
               </div>
               <div>
                 <label htmlFor="testimonialMessageInput" className="block text-sm font-medium text-gray-300 mb-1">Pesan Testimoni</label>
                 <textarea
                   id="testimonialMessageInput"
-                  name="pesan"
+                  name="data[pesan]"
                   rows="4"
                   className="w-full p-3 border-2 border-green-400 rounded-xl bg-white bg-opacity-20 text-white placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-green-300 focus:border-green-500 transition duration-300"
                   placeholder="Tuliskan kesan dan pesan Anda di sini..."
                   value={testimonialMessage}
                   onChange={(e) => setTestimonialMessage(e.target.value)}
                   required
-                  disabled={loading}
                 />
               </div>
               <div>
-                <label htmlFor="testimonialAvatarInput" className="block text-sm font-medium text-gray-300 mb-1">Link Foto/Avatar <span className="text-xs text-gray-400">(opsional, link gambar)</span></label>
+                <label htmlFor="testimonialAvatarInput" className="block text-sm font-medium text-gray-300 mb-1">Upload Foto/Avatar <span className="text-xs text-gray-400">(opsional)</span></label>
                 <input
-                  type="url"
+                  type="file"
                   id="testimonialAvatarInput"
-                  name="foto_url"
+                  accept="image/*"
                   className="w-full p-3 border-2 border-green-400 rounded-xl bg-white bg-opacity-20 text-white placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-green-300 focus:border-green-500 transition duration-300"
-                  placeholder="https://... (link gambar/avatar)"
-                  value={testimonialAvatar}
-                  onChange={(e) => setTestimonialAvatar(e.target.value)}
-                  disabled={loading}
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      setAvatarUploading(true);
+                      setAvatarPreview(URL.createObjectURL(file));
+                      const formData = new FormData();
+                      formData.append('UPLOADCARE_PUB_KEY', 'b3adbf4382ccef6b4376');
+                      formData.append('UPLOADCARE_STORE', '1');
+                      formData.append('file', file);
+                      try {
+                        const response = await fetch('https://upload.uploadcare.com/base/', {
+                          method: 'POST',
+                          body: formData
+                        });
+                        const data = await response.json();
+                        if (data && data.file) {
+                          setTestimonialAvatar(`https://ucarecdn.com/${data.file}/`);
+                        }
+                      } catch (err) {
+                        // error handling
+                        setTestimonialAvatar('');
+                      }
+                      setAvatarUploading(false);
+                    }
+                  }}
+                  disabled={avatarUploading}
                 />
+                {avatarUploading && <div className="text-green-300 text-sm mt-2">Mengupload avatar...</div>}
+                {avatarPreview && (
+                  <div className="mt-2 flex items-center">
+                    <img src={avatarPreview} alt="Preview Avatar" className="w-14 h-14 rounded-full border-2 border-green-400 object-cover" />
+                    <span className="ml-3 text-green-200 text-xs">Preview</span>
+                  </div>
+                )}
               </div>
               <button
                 type="submit"
-                disabled={loading || !(testimonialName.trim() && testimonialMessage.trim())}
+                disabled={!(testimonialName.trim() && testimonialMessage.trim())}
                 className="mt-6 w-full inline-flex items-center justify-center bg-gradient-to-r from-green-500 to-teal-600 text-white px-8 py-3 rounded-xl text-lg font-bold shadow-lg hover:from-green-600 hover:to-teal-700 transition duration-300 transform hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
               >
-                <span className="mr-2">✏️</span> {loading ? 'Mengirim...' : 'Kirim Testimoni'}
+                <span className="mr-2">✏️</span> Kirim Testimoni
                 <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
               </button>
             </form>
+            <iframe name="dummyframe" style={{display:'none'}} />
           </div>
 
           {/* Display Testimonials */}
