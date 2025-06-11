@@ -256,7 +256,7 @@ const App = () => {
               <div className="mb-4 p-3 rounded bg-green-700 text-white font-semibold">Terima kasih, testimoni Anda telah terkirim!</div>
             )}
             <form
-              action="https://sheetdb.io/api/v1/r6yuk1em8fl9a"
+              action="https://sheetdb.io/api/v1/gzm99tvwobclq"
               method="POST"
               className="space-y-4"
               target="dummyframe"
@@ -265,11 +265,12 @@ const App = () => {
                   setIsSubmitted(true);
                   setTestimonialName("");
                   setTestimonialMessage("");
-                  // setTestimonialAvatar is removed, no-op ("");
+                  setAvatarPreview("");
                 }, 100);
               }}
             >
               <input type="hidden" name="data[tanggal]" value={new Date().toISOString()} />
+              <input type="hidden" name="data[foto_url]" value={avatarPreview} />
               <div>
                 <label htmlFor="testimonialNameInput" className="block text-sm font-medium text-gray-300 mb-1">Nama Anda</label>
                 <input
