@@ -56,7 +56,6 @@ const App = () => {
   // Handle submit ke SheetDB
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setIsSubmitted(false);
     const tanggal = new Date().toISOString();
     const formData = {
@@ -79,8 +78,6 @@ const App = () => {
       }
     } catch (err) {
       // bisa tambahkan notif error jika mau
-    } finally {
-      setLoading(false);
     }
   };
 
