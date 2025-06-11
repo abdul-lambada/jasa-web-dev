@@ -254,44 +254,51 @@ const App = () => {
             </span>
           </h2>
 
-          {/* Testimonial Form */}
+          {/* Testimonial Form (Netlify Forms) */}
           <div className="bg-black bg-opacity-20 rounded-xl p-5 mb-6">
             <p className="text-lg text-gray-200 mb-4">
               Kami sangat menghargai masukan Anda. Silakan bagikan pengalaman Anda dengan layanan kami:
             </p>
-            <div className="space-y-4">
+            {isSubmitted && (
+              <div className="mb-4 p-3 rounded bg-green-700 text-white font-semibold">Terima kasih, testimoni Anda telah terkirim!</div>
+            )}
+            <form name="testimoni" method="POST" data-netlify="true" onSubmit={handleSubmit} className="space-y-4">
+              <input type="hidden" name="form-name" value="testimoni" />
               <div>
                 <label htmlFor="testimonialNameInput" className="block text-sm font-medium text-gray-300 mb-1">Nama Anda</label>
                 <input
                   type="text"
                   id="testimonialNameInput"
+                  name="nama"
                   className="w-full p-3 border-2 border-green-400 rounded-xl bg-white bg-opacity-20 text-white placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-green-300 focus:border-green-500 transition duration-300"
                   placeholder="cth: Budi Sanjaya"
                   value={testimonialName}
                   onChange={(e) => setTestimonialName(e.target.value)}
+                  required
                 />
               </div>
               <div>
                 <label htmlFor="testimonialMessageInput" className="block text-sm font-medium text-gray-300 mb-1">Pesan Testimoni</label>
                 <textarea
                   id="testimonialMessageInput"
+                  name="pesan"
                   rows="4"
                   className="w-full p-3 border-2 border-green-400 rounded-xl bg-white bg-opacity-20 text-white placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-green-300 focus:border-green-500 transition duration-300"
                   placeholder="Tuliskan kesan dan pesan Anda di sini..."
                   value={testimonialMessage}
                   onChange={(e) => setTestimonialMessage(e.target.value)}
+                  required
                 />
               </div>
-            </div>
-            <button
-              onClick={handleTestimonialSubmit}
-              disabled={!(typeof testimonialName === 'string' && testimonialName.trim()) || !(typeof testimonialMessage === 'string' && testimonialMessage.trim())}
-              className="mt-6 w-full inline-flex items-center justify-center bg-gradient-to-r from-green-500 to-teal-600 text-white px-8 py-3 rounded-xl text-lg font-bold shadow-lg hover:from-green-600 hover:to-teal-700 transition duration-300 transform hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
-            >
-              {/* Placeholder for PencilSquareIcon */}
-              <span className="mr-2">✏️</span> Kirim Testimoni
-              <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
-            </button>
+              <button
+                type="submit"
+                disabled={!(typeof testimonialName === 'string' && testimonialName.trim()) || !(typeof testimonialMessage === 'string' && testimonialMessage.trim())}
+                className="mt-6 w-full inline-flex items-center justify-center bg-gradient-to-r from-green-500 to-teal-600 text-white px-8 py-3 rounded-xl text-lg font-bold shadow-lg hover:from-green-600 hover:to-teal-700 transition duration-300 transform hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
+              >
+                <span className="mr-2">✏️</span> Kirim Testimoni
+                <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
+              </button>
+            </form>
           </div>
 
           {/* Display Testimonials */}
