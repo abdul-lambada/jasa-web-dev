@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
+// SheetDB endpoint
+const SHEETDB_API = 'https://sheetdb.io/api/v1/r6yuk1em8fl9a';
+
+
 // Inline SVG icons to simulate lucide-react for direct HTML embedding
 // These icons are designed to be clear and representative of their function.
 const CodeIcon = () => (
@@ -32,33 +36,53 @@ const App = () => {
   // State untuk Testimoni
   const [testimonialName, setTestimonialName] = useState('');
   const [testimonialMessage, setTestimonialMessage] = useState('');
+  const [testimonialAvatar, setTestimonialAvatar] = useState('');
   const [testimonialsList, setTestimonialsList] = useState([]);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // Memuat testimoni dari localStorage saat komponen dimuat
+  // Fetch testimoni dari SheetDB saat komponen dimuat
   useEffect(() => {
-    const storedTestimonials = localStorage.getItem('testimonials');
-    if (storedTestimonials) {
-      setTestimonialsList(JSON.parse(storedTestimonials));
-    }
-  }, []);
+    fetch(SHEETDB_API)
+      .then((response) => response.json())
+      .then((data) => {
+        // Data sudah array of object: {nama, pesan, tanggal}
+        setTestimonialsList(data);
+      })
+      .catch(() => setTestimonialsList([]));
+  }, [isSubmitted]); // refresh list setelah submit
 
-  // Menyimpan testimoni ke localStorage setiap kali testimonialsList berubah
-  useEffect(() => {
-    localStorage.setItem('testimonials', JSON.stringify(testimonialsList));
-  }, [testimonialsList]);
-
-  const handleTestimonialSubmit = () => {
-    if (testimonialName.trim() && testimonialMessage.trim()) {
-      const newTestimonial = {
-        name: testimonialName,
-        message: testimonialMessage,
-        date: new Date().toISOString(), // Simpan tanggal dalam format ISO
-      };
-      setTestimonialsList([newTestimonial, ...testimonialsList]); // Tambahkan testimoni baru di awal array
-      setTestimonialName('');
-      setTestimonialMessage('');
+  // Handle submit ke SheetDB
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setIsSubmitted(false);
+    const tanggal = new Date().toISOString();
+    const formData = {
+      nama: testimonialName,
+      pesan: testimonialMessage,
+      tanggal,
+      foto_url: testimonialAvatar,
+    };
+    try {
+      const response = await fetch(SHEETDB_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: formData }),
+      });
+      if (response.ok) {
+        setIsSubmitted(true);
+        setTestimonialName('');
+        setTestimonialMessage('');
+        setTestimonialAvatar('');
+      }
+    } catch (err) {
+      // bisa tambahkan notif error jika mau
+    } finally {
+      setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4 sm:p-6 lg:p-8 font-inter bg-gradient-to-br from-blue-700 via-blue-900 to-gray-900 animate-gradient-shift">
@@ -254,7 +278,7 @@ const App = () => {
             </span>
           </h2>
 
-          {/* Testimonial Form (Netlify Forms) */}
+          {/* Testimonial Form (SheetDB) */}
           <div className="bg-black bg-opacity-20 rounded-xl p-5 mb-6">
             <p className="text-lg text-gray-200 mb-4">
               Kami sangat menghargai masukan Anda. Silakan bagikan pengalaman Anda dengan layanan kami:
@@ -262,8 +286,8 @@ const App = () => {
             {isSubmitted && (
               <div className="mb-4 p-3 rounded bg-green-700 text-white font-semibold">Terima kasih, testimoni Anda telah terkirim!</div>
             )}
-            <form name="testimoni" method="POST" data-netlify="true" onSubmit={handleSubmit} className="space-y-4">
-              <input type="hidden" name="form-name" value="testimoni" />
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <input type="hidden" name="tanggal" value={new Date().toISOString()} />
               <div>
                 <label htmlFor="testimonialNameInput" className="block text-sm font-medium text-gray-300 mb-1">Nama Anda</label>
                 <input
@@ -275,6 +299,7 @@ const App = () => {
                   value={testimonialName}
                   onChange={(e) => setTestimonialName(e.target.value)}
                   required
+                  disabled={loading}
                 />
               </div>
               <div>
@@ -288,14 +313,28 @@ const App = () => {
                   value={testimonialMessage}
                   onChange={(e) => setTestimonialMessage(e.target.value)}
                   required
+                  disabled={loading}
+                />
+              </div>
+              <div>
+                <label htmlFor="testimonialAvatarInput" className="block text-sm font-medium text-gray-300 mb-1">Link Foto/Avatar <span className="text-xs text-gray-400">(opsional, link gambar)</span></label>
+                <input
+                  type="url"
+                  id="testimonialAvatarInput"
+                  name="foto_url"
+                  className="w-full p-3 border-2 border-green-400 rounded-xl bg-white bg-opacity-20 text-white placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-green-300 focus:border-green-500 transition duration-300"
+                  placeholder="https://... (link gambar/avatar)"
+                  value={testimonialAvatar}
+                  onChange={(e) => setTestimonialAvatar(e.target.value)}
+                  disabled={loading}
                 />
               </div>
               <button
                 type="submit"
-                disabled={!(typeof testimonialName === 'string' && testimonialName.trim()) || !(typeof testimonialMessage === 'string' && testimonialMessage.trim())}
+                disabled={loading || !(testimonialName.trim() && testimonialMessage.trim())}
                 className="mt-6 w-full inline-flex items-center justify-center bg-gradient-to-r from-green-500 to-teal-600 text-white px-8 py-3 rounded-xl text-lg font-bold shadow-lg hover:from-green-600 hover:to-teal-700 transition duration-300 transform hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
               >
-                <span className="mr-2">✏️</span> Kirim Testimoni
+                <span className="mr-2">✏️</span> {loading ? 'Mengirim...' : 'Kirim Testimoni'}
                 <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
               </button>
             </form>
@@ -304,28 +343,30 @@ const App = () => {
           {/* Display Testimonials */}
           <div className="mt-8">
             <h3 className="text-xl sm:text-2xl font-bold text-white mb-6 flex items-center">
-              {/* Placeholder for UserGroupIcon */}
               <span className="mr-3 text-2xl">👥</span> Testimoni dari Pelanggan:
             </h3>
-            {(typeof testimonialsList !== 'undefined' && testimonialsList.length === 0) ? (
+            {(!testimonialsList || testimonialsList.length === 0) ? (
               <p className="text-gray-400 italic text-center py-4">Belum ada testimoni. Jadilah yang pertama untuk berbagi pengalaman!</p>
             ) : (
               <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar-green">
-                {typeof testimonialsList !== 'undefined' && testimonialsList.slice().reverse().map((testimonial, index) => (
+                {testimonialsList.slice().reverse().map((testimonial, index) => (
                   <div
                     key={index}
                     className="bg-white bg-opacity-10 border border-white border-opacity-20 rounded-xl p-5 shadow-lg animate-fade-in-up"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
                     <div className="flex items-start mb-3">
-                      {/* Placeholder for UserCircleIcon */}
-                      <span className="w-10 h-10 bg-green-300 rounded-full mr-4 flex-shrink-0 text-2xl flex items-center justify-center">👤</span>
+                      {testimonial.foto_url ? (
+                        <img src={testimonial.foto_url} alt={testimonial.nama} className="w-10 h-10 rounded-full mr-4 object-cover border-2 border-green-300 bg-white flex-shrink-0" onError={e => {e.target.onerror=null; e.target.src='https://ui-avatars.com/api/?name='+encodeURIComponent(testimonial.nama)}} />
+                      ) : (
+                        <span className="w-10 h-10 bg-green-300 rounded-full mr-4 flex-shrink-0 text-2xl flex items-center justify-center">👤</span>
+                      )}
                       <div>
-                        <p className="font-semibold text-lg text-white">{testimonial.name}</p>
-                        <p className="text-xs text-gray-400">{new Date(testimonial.date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                        <p className="font-semibold text-lg text-white">{testimonial.nama}</p>
+                        <p className="text-xs text-gray-400">{testimonial.tanggal ? new Date(testimonial.tanggal).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}</p>
                       </div>
                     </div>
-                    <p className="text-gray-200 whitespace-pre-wrap leading-relaxed text-sm sm:text-base">"{testimonial.message}"</p>
+                    <p className="text-gray-200 whitespace-pre-wrap leading-relaxed text-sm sm:text-base">"{testimonial.pesan}"</p>
                   </div>
                 ))}
               </div>
