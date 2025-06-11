@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 // SheetDB endpoint
-const SHEETDB_API = 'https://sheetdb.io/api/v1/r6yuk1em8fl9a';
+const SHEETDB_API = 'https://sheetdb.io/api/v1/gzm99tvwobclq';
 
 
 // Inline SVG icons to simulate lucide-react for direct HTML embedding
@@ -36,7 +36,6 @@ const App = () => {
   // State untuk Testimoni
   const [testimonialName, setTestimonialName] = useState('');
   const [testimonialMessage, setTestimonialMessage] = useState('');
-  const [testimonialAvatar, setTestimonialAvatar] = useState('');
   const [avatarPreview, setAvatarPreview] = useState('');
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [testimonialsList, setTestimonialsList] = useState([]);
